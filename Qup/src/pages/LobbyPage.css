@@ -1,0 +1,58 @@
+.lobby-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  
+  .lobby-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: space-between;
+  }
+  
+  .lobby-main {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    margin-top: 16px;
+  }
+  
+  .lobby-parties {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .selected-parties {
+    flex: 1;
+    border-left: 1px solid #ddd;
+    padding-left: 16px;
+  }
+  
+  .party-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .party-table th,
+  .party-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .create-party-form {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .party-card {
+    border: 1px solid #ddd;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
