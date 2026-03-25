@@ -1,4 +1,3 @@
-// src/pages/LobbyPage.js
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../socket';
@@ -15,9 +14,8 @@ function LobbyPage() {
 
   const navigate = useNavigate();
 
-  // initial fetch + real-time updates
   useEffect(() => {
-    socket.emit('lobby:join'); // ask server for current snapshot
+    socket.emit('lobby:join'); 
 
     socket.on('lobby:snapshot', data => {
       setParties(data.parties || []);
@@ -38,6 +36,12 @@ function LobbyPage() {
     });
 
     socket.on('party:finalized', ({ partyId }) => {
+      console.log(`finalized party id:${partyId}`);
+      console.log(`number of selected party: ${selectedParties.length}`)
+      console.log('selected party id:');
+      for(const party of selectedParties) {
+        console.log(party.id);
+      }
       navigate(`/chat/${partyId}`);
     });
 
@@ -48,7 +52,7 @@ function LobbyPage() {
       socket.off('lobby:removeParty');
       socket.off('party:finalized');
     };
-  }, [navigate]);
+  }, [navigate, selectedParties]);
 
   const handleSetUsername = e => {
     e.preventDefault();
@@ -81,13 +85,11 @@ function LobbyPage() {
         }
         const createdParty = response.party;
   
-        // Add to local parties list if not already there
         setParties(prev => {
           const exists = prev.some(p => p.id === createdParty.id);
           return exists ? prev : [...prev, createdParty];
         });
   
-        // Auto-select this party for the creator
         setSelectedParties(prev => {
           const alreadySelected = prev.some(p => p.id === createdParty.id);
           if (alreadySelected) return prev;

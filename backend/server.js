@@ -12,14 +12,12 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-// REMOVE ALL PostgreSQL CODE - use in-memory data
 let parties = [];
 let partyIdCounter = 1;
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  // Store username per socket
   socket.on('set-username', (username) => {
     socket.username = username;
   });
@@ -59,10 +57,19 @@ io.on('connection', (socket) => {
     party.currentPlayers++;
   
     io.emit('lobby:updateParty', party);
-  
+
     if (party.currentPlayers === party.maxPlayers) {
-      io.emit('party:finalized', { partyId });
+      const memberUsernames = party.members;
+      for (const [socketId, s] of io.of('/').sockets) {
+        if (memberUsernames.includes(s.username)) {
+          s.emit('party:finalized', { partyId: party.id });
+        }
+      }
     }
+    
+    // if (party.currentPlayers === party.maxPlayers) {
+    //   io.emit('party:finalized', { partyId });
+    // }
   
     callback?.({ ok: true, party });
   });
