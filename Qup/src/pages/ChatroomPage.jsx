@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { socket } from '../socket';
+import { socket, getGlobalUsername } from '../socket';
 import './ChatroomPage.css';
 
 function ChatroomPage() {
@@ -9,6 +9,7 @@ function ChatroomPage() {
   const [partyInfo, setPartyInfo] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const username = getGlobalUsername();
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ function ChatroomPage() {
 
 
   const handleLeaveParty = () => {
-    socket.emit('chat:leave', { partyId });
+    socket.emit('chat:leave', { partyId, username });
     navigate('/');
   };
 

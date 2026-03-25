@@ -14,12 +14,14 @@ app.use(express.json());
 
 let parties = [];
 let partyIdCounter = 1;
+const socketUsernames = new Map();
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('set-username', (username) => {
     socket.username = username;
+    socketUsernames.set(socket.id, username);
   });
 
   socket.on('lobby:join', () => {
@@ -121,12 +123,13 @@ io.on('connection', (socket) => {
     io.to(`party:${partyId}`).emit('chat:message', msg);
   });
 
-  socket.on('chat:leave', ({ partyId }) => {
+  socket.on('chat:leave', ({ partyId, username: clientUsername }) => {
+    const finalUsername = clientUsername || socket.username || socketUsernames.get(socket.id) || 'Unknown';
     const room = `party:${Number(partyId)}`;
-    const username = socket.username || 'Unknown';
+    // const username = socket.username || socketUsernames.get(socket.id) || 'Unknown';
     const systemMsg = {
       sender: 'System',
-      content: `${username} has left the party.`,
+      content: `${finalUsername} has left the party.`,
       type: 'system',
       timestamp: Date.now(),
     };
@@ -136,6 +139,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    socketUsernames.delete(socket.id);
   });
 });
 

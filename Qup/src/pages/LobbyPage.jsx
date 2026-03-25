@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '../socket';
+import { socket , setGlobalUsername, getGlobalUsername } from '../socket';
 import './LobbyPage.css';
 
 function LobbyPage() {
@@ -9,7 +9,7 @@ function LobbyPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [playerFilter, setPlayerFilter] = useState('all');
   const [searchId, setSearchId] = useState('');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(getGlobalUsername());
   const [tempName, setTempName] = useState('');
 
   const navigate = useNavigate();
@@ -59,7 +59,8 @@ function LobbyPage() {
     if (!tempName.trim()) return;
     const finalName = tempName.trim();
     setUsername(finalName);
-    socket.emit('set-username', finalName);
+    setGlobalUsername(finalName);
+    // socket.emit('set-username', finalName);
   };
 
   const handleCreateParty = e => {
