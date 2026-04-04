@@ -43,6 +43,7 @@ io.on('connection', (socket) => {
     if (callback) callback({ ok: true, party });
   });
 
+  
   socket.on('party:join', ({ partyId, username }, callback) => {
     const party = parties.find(p => p.id === partyId);
     if (!party) {
@@ -61,6 +62,22 @@ io.on('connection', (socket) => {
     io.emit('lobby:updateParty', party);
 
     if (party.currentPlayers === party.maxPlayers) {
+
+      for (const otherParty of parties) {
+        if (otherParty.id === party.id) continue;
+
+        if (otherParty.members.includes(username)) {
+          otherParty.members = otherParty.members.filter(m => m !== username);
+          otherParty.currentPlayers = otherParty.members.length;
+  
+          if (otherParty.currentPlayers === 0) {
+            parties = parties.filter(p => p.id !== otherParty.id);
+            io.emit('lobby:removeParty', otherParty.id);
+          } else {
+            io.emit('lobby:updateParty', otherParty);
+          }
+        }
+      }
       const memberUsernames = party.members;
       for (const [socketId, s] of io.of('/').sockets) {
         if (memberUsernames.includes(s.username)) {
