@@ -24,6 +24,11 @@ function ChatroomPage() {
       setMessages(prev => [...prev, msg]);
     };
 
+    const handlePartyUpdate = (updatedParty) => {
+      console.log('handlePartyUpdate');
+      setPartyInfo(updatedParty);
+    };
+
     const handleChatClosed = () => {
       alert('Party closed.');
       navigate('/');
@@ -31,11 +36,13 @@ function ChatroomPage() {
 
     socket.on('chat:info', handleChatInfo);
     socket.on('chat:message', handleChatMessage);
+    socket.on('chat:partyUpdate', handlePartyUpdate);
     socket.on('chat:closed', handleChatClosed);
 
     return () => {
       socket.off('chat:info', handleChatInfo);
       socket.off('chat:message', handleChatMessage);
+      socket.off('chat:partyUpdate', handlePartyUpdate);
       socket.off('chat:closed', handleChatClosed);
     };
   }, [partyId, navigate]);
@@ -72,7 +79,7 @@ function ChatroomPage() {
           <div className="party-meta">
             <span>{partyInfo.category}</span>
             <span>
-              ({partyInfo.currentPlayers}/{partyInfo.maxPlayers}) members
+              ({partyInfo.members.length}/{partyInfo.maxPlayers}) members
             </span>
           </div>
         )}

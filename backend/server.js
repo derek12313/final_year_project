@@ -37,8 +37,7 @@ io.on('connection', (socket) => {
       currentPlayers: 1,
       members: [username],
       creator: username,
-      finalized: false,
-      chatroomPlayers: 0
+      finalized: false
     };
     parties.push(party);
     io.emit('lobby:newParty', party);
@@ -66,7 +65,6 @@ io.on('connection', (socket) => {
     //party full
     if (party.currentPlayers === party.maxPlayers) {
       party.finalized = true;
-      party.chatroomPlayers = party.members.length;
       io.emit('lobby:removeParty', party.id);
       for (const otherParty of parties) {
         if (otherParty.id === party.id) continue;
@@ -120,7 +118,6 @@ io.on('connection', (socket) => {
   socket.on('chat:join', ({ partyId }) => {
     const numericId = Number(partyId); 
     const party = parties.find(p => p.id === numericId);
-
     if (!party) {
       socket.emit('chat:closed');
       return;
@@ -129,7 +126,6 @@ io.on('connection', (socket) => {
     socket.join(`party:${numericId}`);
 
     const history = party.history || [];
-
     socket.emit('chat:info', {
       party,
       history
@@ -146,6 +142,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('chat:leave', ({ partyId, username: clientUsername }) => {
+    const id = Number(partyId);
+    const party = parties.find(p => p.id === id);
+    if (!party) return;
+
     const finalUsername = clientUsername || socket.username || socketUsernames.get(socket.id) || 'Unknown';
     const room = `party:${Number(partyId)}`;
     // const username = socket.username || socketUsernames.get(socket.id) || 'Unknown';
@@ -156,6 +156,13 @@ io.on('connection', (socket) => {
       timestamp: Date.now(),
     };
     io.to(room).emit('chat:message', systemMsg);
+
+    party.members = party.members.filter(m => m !== clientUsername);
+    io.to(`party:${id}`).emit('chat:partyUpdate', party);
+    if (party.members.length === 0) {
+      parties = parties.filter(p => p.id !== id);
+    }
+
     socket.leave(room);
   });
 
