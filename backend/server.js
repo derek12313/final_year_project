@@ -36,7 +36,9 @@ io.on('connection', (socket) => {
       maxPlayers,
       currentPlayers: 1,
       members: [username],
-      creator: username
+      creator: username,
+      finalized: false,
+      chatroomPlayers: 0
     };
     parties.push(party);
     io.emit('lobby:newParty', party);
@@ -61,8 +63,11 @@ io.on('connection', (socket) => {
   
     io.emit('lobby:updateParty', party);
 
+    //party full
     if (party.currentPlayers === party.maxPlayers) {
-
+      party.finalized = true;
+      party.chatroomPlayers = party.members.length;
+      io.emit('lobby:removeParty', party.id);
       for (const otherParty of parties) {
         if (otherParty.id === party.id) continue;
 
