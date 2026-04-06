@@ -14,6 +14,95 @@ function LobbyPage() {
 
   const navigate = useNavigate();
 
+  const handleSetUsername = e => {
+    e.preventDefault();
+    if (!tempName.trim()) return;
+    const finalName = tempName.trim();
+    setUsername(finalName);
+    setGlobalUsername(finalName);
+  };
+
+  const handleCreateParty = e => {
+    e.preventDefault();
+    if (!username) {
+      alert('Set a username first.');
+      return;
+    }
+    const form = e.target;
+    const name = form.partyName.value.trim();
+    const category = form.category.value;
+    const maxPlayers = Number(form.maxPlayers.value);
+  
+    if (!name || maxPlayers < 2) return;
+  
+    socket.emit(
+      'party:create',
+      { name, category, maxPlayers },
+      (response) => {
+        if (!response?.ok) {
+          alert(response?.message || 'Failed to create party.');
+          return;
+        }
+      }
+    );
+  
+    form.reset();
+  };
+
+  const handleJoinParty = partyId => {
+    if (!username) {
+      alert('Set a username first.');
+      return;
+    }
+
+    if (selectedParties.some(p => p.id === partyId)) {
+      alert('You are already in this party');
+      return;
+    }
+  
+    if (selectedParties.length >= 5) {
+      alert('You can only join up to 5 parties.');
+      return;
+    }
+  
+    socket.emit('party:join', { partyId: partyId }, response => {
+      if (!response?.ok) {
+        alert(response.message || 'Unable to join party.');
+        return;
+      }
+    });
+  };
+
+  const handleLeaveParty = partyId => {
+    socket.emit('party:leave', { partyId }, (response) => {
+      if (!response?.ok) {
+        alert(response?.message || 'Unable to leave party.');
+        return;
+      }
+    }); 
+  };
+  
+
+  const filteredParties = useMemo(() => {
+    return parties
+      .filter(p =>
+        categoryFilter === 'all' ? true : p.category === categoryFilter
+      )
+      .filter(p => {
+        if (playerFilter === 'all') return true;
+        if (playerFilter === 'almost-full') {
+          return p.currentPlayers >= p.maxPlayers - 1;
+        }
+        if (playerFilter === 'has-space') {
+          return p.currentPlayers < p.maxPlayers;
+        }
+        return true;
+      })
+      .filter(p =>
+        searchId.trim() ? String(p.id).includes(searchId.trim()) : true
+      );
+  }, [parties, categoryFilter, playerFilter, searchId]);
+
   useEffect(() => {
     socket.emit('lobby:join'); 
 
@@ -54,10 +143,12 @@ function LobbyPage() {
     socket.on('party:finalized', ({ partyId }) => {
       console.log(`finalized party id:${partyId}`);
       console.log(`number of selected party: ${selectedParties.length}`)
-      console.log('selected party id:');
-      for(const party of selectedParties) {
-        console.log(party.id);
-      }
+      selectedParties.forEach(party => {
+        if (party.id !== partyId) {
+          console.log(`Leaving party: ${party.id}`);
+          handleLeaveParty(party.id);  
+        }
+      });
       navigate(`/chat/${partyId}`);
     });
 
@@ -70,106 +161,6 @@ function LobbyPage() {
     };
   }, [navigate, selectedParties]);
 
-  const handleSetUsername = e => {
-    e.preventDefault();
-    if (!tempName.trim()) return;
-    const finalName = tempName.trim();
-    setUsername(finalName);
-    setGlobalUsername(finalName);
-  };
-
-  const handleCreateParty = e => {
-    e.preventDefault();
-    if (!username) {
-      alert('Set a username first.');
-      return;
-    }
-    const form = e.target;
-    const name = form.partyName.value.trim();
-    const category = form.category.value;
-    const maxPlayers = Number(form.maxPlayers.value);
-  
-    if (!name || maxPlayers < 2) return;
-  
-    socket.emit(
-      'party:create',
-      { name, category, maxPlayers },
-      (response) => {
-        if (!response?.ok) {
-          alert(response?.message || 'Failed to create party.');
-          return;
-        }
-      }
-    );
-  
-    form.reset();
-  };
-
-  const handleJoinParty = party => {
-    if (!username) {
-      alert('Set a username first.');
-      return;
-    }
-
-    if (selectedParties.some(p => p.id === party.id)) {
-      alert('You are already in this party');
-      return;
-    }
-  
-    if (selectedParties.length >= 5) {
-      alert('You can only join up to 5 parties.');
-      return;
-    }
-  
-    socket.emit('party:join', { partyId: party.id, username }, response => {
-      if (!response?.ok) {
-        alert(response.message || 'Unable to join party.');
-        return;
-      }
-  
-      const updatedParty = response.party || party;
-  
-      setParties(prev =>
-        prev.map(p => (p.id === updatedParty.id ? updatedParty : p))
-      );
-  
-      setSelectedParties(prev => {
-        const alreadySelected = prev.some(p => p.id === updatedParty.id);
-        if (alreadySelected) return prev;
-        return [...prev, updatedParty];
-      });
-    });
-  };
-
-  const handleLeaveParty = partyId => {
-    socket.emit('party:leave', { partyId }, (response) => {
-      if (!response?.ok) {
-        alert(response?.message || 'Unable to leave party.');
-        return;
-      }
-    }); 
-  };
-  
-
-  const filteredParties = useMemo(() => {
-    return parties
-      .filter(p =>
-        categoryFilter === 'all' ? true : p.category === categoryFilter
-      )
-      .filter(p => {
-        if (playerFilter === 'all') return true;
-        if (playerFilter === 'almost-full') {
-          return p.currentPlayers >= p.maxPlayers - 1;
-        }
-        if (playerFilter === 'has-space') {
-          return p.currentPlayers < p.maxPlayers;
-        }
-        return true;
-      })
-      .filter(p =>
-        searchId.trim() ? String(p.id).includes(searchId.trim()) : true
-      );
-  }, [parties, categoryFilter, playerFilter, searchId]);
 
   return (
     <div className="lobby-container">
@@ -240,7 +231,7 @@ function LobbyPage() {
                   </td>
                   <td>
                     <button
-                      onClick={() => handleJoinParty(party)}
+                      onClick={() => handleJoinParty(party.id)}
                       disabled={party.currentPlayers >= party.maxPlayers}
                     >
                       {party.currentPlayers >= party.maxPlayers

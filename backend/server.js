@@ -48,53 +48,35 @@ io.on('connection', (socket) => {
   });
 
   
-  socket.on('party:join', ({ partyId, username }, callback) => {
+  socket.on('party:join', ({ partyId }, callback) => {
     const party = parties.find(p => p.id === partyId);
     if (!party) {
       return callback?.({ ok: false, message: 'Party not found' });
     }
-    if (party.members.includes(username)) {
+    if (party.members.includes(socket.username)) {
       return callback?.({ ok: false, message: 'You are already in this party' });
     }
     if (party.currentPlayers >= party.maxPlayers) {
       return callback?.({ ok: false, message: 'Party is full' });
     }
   
-    party.members.push(username);
+    party.members.push(socket.username);
     party.currentPlayers++;
   
     io.emit('lobby:updateParty', party);
-
+    socket.emit('lobby:addSelected', party)
     //party full
     if (party.currentPlayers === party.maxPlayers) {
       party.finalized = true;
-      io.emit('lobby:removeParty', party.id);
-      for (const otherParty of parties) {
-        if (otherParty.id === party.id) continue;
-
-        if (otherParty.members.includes(username)) {
-          otherParty.members = otherParty.members.filter(m => m !== username);
-          otherParty.currentPlayers = otherParty.members.length;
-  
-          if (otherParty.currentPlayers === 0) {
-            parties = parties.filter(p => p.id !== otherParty.id);
-            io.emit('lobby:removeParty', otherParty.id);
-          } else {
-            io.emit('lobby:updateParty', otherParty);
-          }
-        }
-      }
+      party.name = party.name + `(full)`;
+      io.emit('lobby:updateParty', party);
       const memberUsernames = party.members;
       for (const [socketId, s] of io.of('/').sockets) {
         if (memberUsernames.includes(s.username)) {
-          s.emit('party:finalized', { partyId: party.id });
+          s.emit('party:finalized', { partyId });
         }
       }
     }
-    
-    // if (party.currentPlayers === party.maxPlayers) {
-    //   io.emit('party:finalized', { partyId });
-    // }
   
     callback?.({ ok: true, party });
   });
