@@ -45,6 +45,12 @@ function LobbyPage() {
       setParties(prev => prev.filter(p => p.id !== id));
     });
 
+    socket.on('lobby:removeSelected', partyId => {
+      setSelectedParties(prev =>
+        prev.filter(p => p.id !== partyId)
+      );
+    })
+
     socket.on('party:finalized', ({ partyId }) => {
       console.log(`finalized party id:${partyId}`);
       console.log(`number of selected party: ${selectedParties.length}`)
@@ -136,28 +142,12 @@ function LobbyPage() {
   };
 
   const handleLeaveParty = partyId => {
-    if (!username) {
-      alert('Set a username first.');
-      return;
-    }
-  
-    socket.emit('party:leave', { partyId, username }, (response) => {
+    socket.emit('party:leave', { partyId }, (response) => {
       if (!response?.ok) {
         alert(response?.message || 'Unable to leave party.');
         return;
       }
-  
-      const updatedParty = response.party;
-      if (updatedParty) {
-        setParties(prev =>
-          prev.map(p => (p.id === updatedParty.id ? updatedParty : p))
-        );
-      }
-
-      setSelectedParties(prev =>
-        prev.filter(p => p.id !== partyId)
-      );
-    });
+    }); 
   };
   
 

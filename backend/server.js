@@ -99,15 +99,15 @@ io.on('connection', (socket) => {
     callback?.({ ok: true, party });
   });
 
-  socket.on('party:leave', ({ partyId, username }, callback) => {
+  socket.on('party:leave', ({ partyId }, callback) => {
     const party = parties.find(p => p.id === partyId);
     if (!party) {
       return callback?.({ ok: false, message: 'Party not found' });
     }
 
-    party.members = party.members.filter(m => m !== username);
+    party.members = party.members.filter(m => m !== socket.username);
     party.currentPlayers = party.members.length;
-
+    socket.emit('lobby:removeSelected', partyId)
     if (party.currentPlayers === 0) {
       parties = parties.filter(p => p.id !== partyId);
       io.emit('lobby:removeParty', partyId);
