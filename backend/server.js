@@ -28,19 +28,22 @@ io.on('connection', (socket) => {
     socket.emit('lobby:snapshot', { parties });
   });
 
-  socket.on('party:create', ({ name, category, maxPlayers, username }, callback) => {
+  socket.on('party:create', ({ name, category, maxPlayers }, callback) => {
     const party = {
       id: partyIdCounter++,
       name,
       category,
       maxPlayers,
       currentPlayers: 1,
-      members: [username],
-      creator: username,
+      membersid: [socket.id],
+      members: [socket.username],
+      creator: socket.username,
       finalized: false
     };
+    console.log(`${socket.username}(${socket.id}) created party ${name}`);
     parties.push(party);
     io.emit('lobby:newParty', party);
+    socket.emit('lobby:addSelected', party);
     if (callback) callback({ ok: true, party });
   });
 

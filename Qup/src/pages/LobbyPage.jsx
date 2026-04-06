@@ -28,7 +28,17 @@ function LobbyPage() {
     });
 
     socket.on('lobby:newParty', newParty => {
-      setParties(prev => [...prev, newParty]);
+      setParties(prev => {
+        const exists = prev.some(p => p.id === newParty.id);
+        return exists ? prev : [...prev, newParty];
+      });
+    });
+    
+    socket.on('lobby:addSelected', newParty => {
+      setSelectedParties(prev => {
+        const exists = prev.some(p => p.id === newParty.id);
+        return exists ? prev : [...prev, newParty];
+      });
     });
 
     socket.on('lobby:removeParty', id => {
@@ -60,7 +70,6 @@ function LobbyPage() {
     const finalName = tempName.trim();
     setUsername(finalName);
     setGlobalUsername(finalName);
-    // socket.emit('set-username', finalName);
   };
 
   const handleCreateParty = e => {
@@ -78,24 +87,12 @@ function LobbyPage() {
   
     socket.emit(
       'party:create',
-      { name, category, maxPlayers, username },
+      { name, category, maxPlayers },
       (response) => {
         if (!response?.ok) {
           alert(response?.message || 'Failed to create party.');
           return;
         }
-        const createdParty = response.party;
-  
-        setParties(prev => {
-          const exists = prev.some(p => p.id === createdParty.id);
-          return exists ? prev : [...prev, createdParty];
-        });
-  
-        setSelectedParties(prev => {
-          const alreadySelected = prev.some(p => p.id === createdParty.id);
-          if (alreadySelected) return prev;
-          return [...prev, createdParty];
-        });
       }
     );
   
