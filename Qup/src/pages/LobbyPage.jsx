@@ -142,7 +142,6 @@ function LobbyPage() {
 
     socket.on('party:finalized', ({ partyId }) => {
       console.log(`finalized party id:${partyId}`);
-      console.log(`number of selected party: ${selectedParties.length}`)
       selectedParties.forEach(party => {
         if (party.id !== partyId) {
           console.log(`Leaving party: ${party.id}`);

@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
 
   socket.on('party:create', ({ name, category, maxPlayers }, callback) => {
     const party = {
-      id: partyIdCounter++,
+      id: `${partyIdCounter++}`,
       name,
       category,
       maxPlayers,
@@ -101,14 +101,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('chat:join', ({ partyId }) => {
-    const numericId = Number(partyId); 
-    const party = parties.find(p => p.id === numericId);
+    const party = parties.find(p => p.id === partyId);
     if (!party) {
       socket.emit('chat:closed');
       return;
     }
 
-    socket.join(`party:${numericId}`);
+    socket.join(`party:${partyId}`);
 
     const history = party.history || [];
     socket.emit('chat:info', {
@@ -127,12 +126,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('chat:leave', ({ partyId, username: clientUsername }) => {
-    const id = Number(partyId);
-    const party = parties.find(p => p.id === id);
+    const party = parties.find(p => p.id === partyId);
     if (!party) return;
 
     const finalUsername = clientUsername || socket.username || socketUsernames.get(socket.id) || 'Unknown';
-    const room = `party:${Number(partyId)}`;
     // const username = socket.username || socketUsernames.get(socket.id) || 'Unknown';
     const systemMsg = {
       sender: 'System',
@@ -140,15 +137,19 @@ io.on('connection', (socket) => {
       type: 'system',
       timestamp: Date.now(),
     };
-    io.to(room).emit('chat:message', systemMsg);
-
+    io.to(`party:${partyId}`).emit('chat:message', systemMsg);
+    
     party.members = party.members.filter(m => m !== clientUsername);
-    io.to(`party:${id}`).emit('chat:partyUpdate', party);
-    if (party.members.length === 0) {
-      parties = parties.filter(p => p.id !== id);
+    party.currentPlayers = party.members.length;
+    
+    if (party.currentPlayers === 0) {
+      parties = parties.filter(p => p.id !== partyId);
+      io.emit('lobby:removeParty', partyId);
+    } else {
+      io.emit('lobby:updateParty', party);
     }
 
-    socket.leave(room);
+    socket.leave(`party:${partyId}}`);
   });
 
   socket.on('disconnect', () => {
