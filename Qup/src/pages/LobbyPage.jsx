@@ -60,14 +60,14 @@ function LobbyPage() {
       return;
     }
   
-    if (selectedParties.length >= 5) {
-      alert('You can only join up to 5 parties.');
-      return;
-    }
+    // if (selectedParties.length >= 5) {
+    //   alert('You can only join up to 5 parties.');
+    //   return;
+    // }
   
     socket.emit('party:join', { partyId: partyId }, response => {
       if (!response?.ok) {
-        alert(response.message || 'Unable to join party.');
+        alert(response.message || `Unable to join party${partyId}.`);
         return;
       }
     });
@@ -82,7 +82,7 @@ function LobbyPage() {
     }); 
   };
   
-
+  
   const filteredParties = useMemo(() => {
     return parties
       .filter(p =>
@@ -91,10 +91,10 @@ function LobbyPage() {
       .filter(p => {
         if (playerFilter === 'all') return true;
         if (playerFilter === 'almost-full') {
-          return p.currentPlayers >= p.maxPlayers - 1;
+          return !p.finalized && p.currentPlayers >= p.maxPlayers - 1;
         }
-        if (playerFilter === 'has-space') {
-          return p.currentPlayers < p.maxPlayers;
+        if (playerFilter === 'not-finalized') {
+          return !p.finalized && p.currentPlayers < p.maxPlayers;
         }
         return true;
       })
@@ -103,6 +103,23 @@ function LobbyPage() {
       );
   }, [parties, categoryFilter, playerFilter, searchId]);
 
+  const handleSelectAll = () => {
+    const availableParties = filteredParties.filter(
+      p => !selectedParties.some(sp => sp.id === p.id) && 
+      p.currentPlayers < p.maxPlayers &&
+      !p.finalized
+    );
+    
+    availableParties.forEach(party => {
+      handleJoinParty(party.id);
+    });
+  };
+
+  const handleDeselectAll = () => {
+    selectedParties.forEach(party => {
+      handleLeaveParty(party.id);
+    });
+  };
   useEffect(() => {
     socket.emit('lobby:join'); 
 
@@ -192,7 +209,7 @@ function LobbyPage() {
               <option value="all">All categories</option>
               <option value="Overcooked 2">Overcooked 2</option>
               <option value="It Takes Two">It Takes Two</option>
-              <option value="Other">Other</option>
+              <option value="Moving Out">Moving Out</option>
             </select>
 
             <select
@@ -200,7 +217,7 @@ function LobbyPage() {
               onChange={e => setPlayerFilter(e.target.value)}
             >
               <option value="all">All parties</option>
-              <option value="has-space">Has space</option>
+              <option value="not-finalized">Not finalized</option>
               <option value="almost-full">Almost full</option>
             </select>
 
@@ -210,6 +227,22 @@ function LobbyPage() {
               value={searchId}
               onChange={e => setSearchId(e.target.value)}
             />
+            <div className="bulk-actions">
+              <button 
+                onClick={handleSelectAll}
+                disabled={filteredParties.length === 0 || !username}
+                className="bulk-btn select-all"
+              >
+                Select All ({filteredParties.length})
+              </button>
+              <button 
+                onClick={handleDeselectAll}
+                disabled={selectedParties.length === 0 || !username}
+                className="bulk-btn deselect-all"
+              >
+                Deselect All ({selectedParties.length})
+              </button>
+            </div>
           </div>
 
           <table className="party-table">
@@ -276,7 +309,7 @@ function LobbyPage() {
             <select name="category" defaultValue="Overcooked 2" required>
               <option value="Overcooked 2">Overcooked 2</option>
               <option value="It Takes Two">It Takes Two</option>
-              <option value="Other">Other</option>
+              <option value="Moving Out">Moving Out</option>
             </select>
             <input
               type="number"
@@ -292,7 +325,7 @@ function LobbyPage() {
 
         <aside className="selected-parties">
           <h2>Selected Parties</h2>
-          {selectedParties.length === 0 && <p>No parties joined.</p>}
+          {selectedParties.length === 0 && <p>You haven't selected any party yet.</p>}
           {selectedParties.map(party => (
             <div key={party.id} className="party-card">
               <div>

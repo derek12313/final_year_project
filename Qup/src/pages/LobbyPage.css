@@ -5,54 +5,82 @@
     padding: 16px;
     box-sizing: border-box;
   }
-  
-  .lobby-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    justify-content: space-between;
-  }
-  
-  .lobby-main {
-    display: flex;
-    gap: 16px;
-    flex: 1;
-    margin-top: 16px;
-  }
-  
-  .lobby-parties {
-    flex: 3;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .selected-parties {
-    flex: 1;
-    border-left: 1px solid #ddd;
-    padding-left: 16px;
-  }
-  
-  .party-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .party-table th,
-  .party-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  .create-party-form {
-    margin-top: 16px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .party-card {
-    border: 1px solid #ddd;
-    padding: 8px;
-    margin-bottom: 8px;
-  }
-  
+
+.lobby-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.lobby-main {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  margin-top: 16px;
+}
+
+.lobby-parties {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+}
+
+.selected-parties {
+  flex: 1;
+  border-left: 1px solid #ddd;
+  padding-left: 16px;
+}
+
+.party-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.party-table th,
+.party-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.create-party-form {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.party-card {
+  border: 1px solid #ddd;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.bulk-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select-all {
+  background: #2196F3;
+  color: white;
+}
+
+.deselect-all {
+  background: #f44336;
+  color: white;
+}
