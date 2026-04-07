@@ -114,6 +114,9 @@ function LobbyPage() {
       setParties(prev =>
         prev.map(p => (p.id === updatedParty.id ? updatedParty : p))
       );
+      setSelectedParties(prev =>
+        prev.map(p => (p.id === updatedParty.id ? updatedParty : p))
+      );
     });
 
     socket.on('lobby:newParty', newParty => {
