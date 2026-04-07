@@ -124,15 +124,12 @@ io.on('connection', (socket) => {
     io.to(`party:${partyId}`).emit('chat:message', msg);
   });
 
-  socket.on('chat:leave', ({ partyId, username: clientUsername }) => {
+  socket.on('chat:leave', ({ partyId }) => {
     const party = parties.find(p => p.id === partyId);
     if (!party) return;
-
-    const finalUsername = clientUsername || socket.username || socketUsernames.get(socket.id) || 'Unknown';
-    // const username = socket.username || socketUsernames.get(socket.id) || 'Unknown';
     const systemMsg = {
       sender: 'System',
-      content: `${finalUsername} has left the party.`,
+      content: `${socket.username} has left the party.`,
       type: 'system',
       timestamp: Date.now(),
     };
@@ -148,7 +145,7 @@ io.on('connection', (socket) => {
       io.emit('lobby:updateParty', party);
     }
 
-    socket.leave(`party:${partyId}}`);
+    socket.leave(`party:${partyId}`);
   });
 
   socket.on('disconnect', () => {

@@ -220,26 +220,38 @@ function LobbyPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredParties.map(party => (
-                <tr key={party.id}>
-                  <td>{party.id}</td>
-                  <td>{party.name}</td>
-                  <td>{party.category}</td>
-                  <td>
-                    {party.currentPlayers}/{party.maxPlayers}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleJoinParty(party.id)}
-                      disabled={party.currentPlayers >= party.maxPlayers}
-                    >
-                      {party.currentPlayers >= party.maxPlayers
-                        ? 'Full'
-                        : 'Join'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredParties.map(party => {
+                  const isSelected = selectedParties.some(p => p.id === party.id);
+                  return (
+                  <tr key={party.id}>
+                    <td>{party.id}</td>
+                    <td>{party.name}</td>
+                    <td>{party.category}</td>
+                    <td>
+                      {party.currentPlayers}/{party.maxPlayers}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => 
+                          isSelected 
+                            ? handleLeaveParty(party.id) 
+                            : handleJoinParty(party.id)
+                        }
+                        disabled={!isSelected && party.currentPlayers >= party.maxPlayers || party.finalized}
+                      >
+                        {isSelected 
+                          ? 'Leave'
+                          : party.finalized
+                            ? 'Finalized' 
+                            : party.currentPlayers >= party.maxPlayers 
+                              ? 'Full' 
+                              : 'Join'
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {filteredParties.length === 0 && (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center' }}>
