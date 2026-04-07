@@ -35,9 +35,8 @@ io.on('connection', (socket) => {
       category,
       maxPlayers,
       currentPlayers: 1,
-      membersid: [socket.id],
-      members: [socket.username],
-      creator: socket.username,
+      members: [socket.id],
+      creator: socket.id,
       finalized: false
     };
     console.log(`${socket.username}(${socket.id}) created party ${name}`);
@@ -53,14 +52,14 @@ io.on('connection', (socket) => {
     if (!party) {
       return callback?.({ ok: false, message: 'Party not found' });
     }
-    if (party.members.includes(socket.username)) {
+    if (party.members.includes(socket.id)) {
       return callback?.({ ok: false, message: 'You are already in this party' });
     }
     if (party.currentPlayers >= party.maxPlayers) {
       return callback?.({ ok: false, message: 'Party is full' });
     }
   
-    party.members.push(socket.username);
+    party.members.push(socket.id);
     party.currentPlayers++;
   
     io.emit('lobby:updateParty', party);
@@ -72,7 +71,7 @@ io.on('connection', (socket) => {
       io.emit('lobby:updateParty', party);
       const memberUsernames = party.members;
       for (const [socketId, s] of io.of('/').sockets) {
-        if (memberUsernames.includes(s.username)) {
+        if (memberUsernames.includes(s.id)) {
           s.emit('party:finalized', { partyId });
         }
       }
@@ -87,7 +86,7 @@ io.on('connection', (socket) => {
       return callback?.({ ok: false, message: 'Party not found' });
     }
 
-    party.members = party.members.filter(m => m !== socket.username);
+    party.members = party.members.filter(m => m !== socket.id);
     party.currentPlayers = party.members.length;
     socket.emit('lobby:removeSelected', partyId)
     if (party.currentPlayers === 0) {
@@ -139,7 +138,7 @@ io.on('connection', (socket) => {
     };
     io.to(`party:${partyId}`).emit('chat:message', systemMsg);
     
-    party.members = party.members.filter(m => m !== clientUsername);
+    party.members = party.members.filter(m => m !== socket.id);
     party.currentPlayers = party.members.length;
     
     if (party.currentPlayers === 0) {
