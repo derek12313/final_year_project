@@ -100,9 +100,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('chat:join', ({ partyId }) => {
+    
     const party = parties.find(p => p.id === partyId);
     if (!party) {
       socket.emit('chat:closed');
+      return;
+    }
+
+    if (!party.members.includes(socket.id)) {
+      socket.emit('chat:accessDenied');
       return;
     }
 

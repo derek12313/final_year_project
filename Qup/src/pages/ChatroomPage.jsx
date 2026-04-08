@@ -30,19 +30,27 @@ function ChatroomPage() {
 
     const handleChatClosed = () => {
       alert('Party closed.');
+      console.log('Party closed');
       navigate('/');
     };
 
+    const handleAccessDenied = () => {
+      alert('Access Denied');
+      console.log('Access Denied');
+      navigate('/');
+    }
     socket.on('chat:info', handleChatInfo);
     socket.on('chat:message', handleChatMessage);
     socket.on('chat:partyUpdate', handlePartyUpdate);
     socket.on('chat:closed', handleChatClosed);
+    socket.on('chat:accessDenied', handleAccessDenied);
 
     return () => {
       socket.off('chat:info', handleChatInfo);
       socket.off('chat:message', handleChatMessage);
       socket.off('chat:partyUpdate', handlePartyUpdate);
       socket.off('chat:closed', handleChatClosed);
+      socket.off('chat:accessDenied', handleAccessDenied);
     };
   }, [partyId, navigate]);
 
