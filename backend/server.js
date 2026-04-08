@@ -2,19 +2,33 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: 'http://localhost:3000' }
 });
-
 app.use(cors());
 app.use(express.json());
+
+const categoriesPath = path.join(__dirname, 'data', 'categories.json');
+let gameCategories = [];
+try {
+  const categoriesData = fs.readFileSync(categoriesPath, 'utf8');
+  const categories = JSON.parse(categoriesData);
+  gameCategories = categories.gameCategories || [];
+  console.log('Loaded categories:', gameCategories);
+} catch (error) {
+  console.error('Failed to load categories:', error.message);
+  gameCategories = ['Overcooked 2', 'It Takes Two', 'Moving Out'];
+}
 
 let parties = [];
 let partyIdCounter = 1;
 const socketUsernames = new Map();
+// const gameCategories = ['Overcooked 2', 'It Takes Two', 'Moving Out', 'Minecraft'];
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -25,10 +39,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('lobby:join', () => {
-    socket.emit('lobby:snapshot', { parties });
+    socket.emit('lobby:snapshot', { parties, gameCategories });
   });
 
   socket.on('party:create', ({ name, category, maxPlayers }, callback) => {
+    if (!gameCategories.includes(category)) {
+      return callback?.({ ok: false, message: 'Invalid category' });
+    }
     const party = {
       id: `${partyIdCounter++}`,
       name,

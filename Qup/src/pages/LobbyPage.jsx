@@ -11,6 +11,7 @@ function LobbyPage() {
   const [searchId, setSearchId] = useState('');
   const [username, setUsername] = useState(getGlobalUsername());
   const [tempName, setTempName] = useState('');
+  const [gameCategories, setGameCategories] = useState([]);
 
   const navigate = useNavigate();
 
@@ -125,6 +126,7 @@ function LobbyPage() {
 
     socket.on('lobby:snapshot', data => {
       setParties(data.parties || []);
+      setGameCategories(data.gameCategories || []);
     });
 
     socket.on('lobby:updateParty', updatedParty => {
@@ -207,9 +209,11 @@ function LobbyPage() {
               onChange={e => setCategoryFilter(e.target.value)}
             >
               <option value="all">All categories</option>
-              <option value="Overcooked 2">Overcooked 2</option>
-              <option value="It Takes Two">It Takes Two</option>
-              <option value="Moving Out">Moving Out</option>
+              {gameCategories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
 
             <select
@@ -306,10 +310,13 @@ function LobbyPage() {
               placeholder="Party name"
               required
             />
-            <select name="category" defaultValue="Overcooked 2" required>
-              <option value="Overcooked 2">Overcooked 2</option>
-              <option value="It Takes Two">It Takes Two</option>
-              <option value="Moving Out">Moving Out</option>
+            <select name="category" defaultValue="" required>
+            <option value="" disabled>Select a category</option>
+              {gameCategories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
             <input
               type="number"
